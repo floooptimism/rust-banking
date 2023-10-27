@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use super::consumer::{Account, ATMCard};
+
 use super::types::ID;
-use super::bank::{Bank, BankTransaction, TransferFee};
+use super::bank::{Bank, TransferFee};
 
 pub struct BankAssociation {
     banks: HashMap<ID, Bank>,

@@ -1,15 +1,23 @@
 use std::collections::HashMap;
+use self::errors::{BankError, TransactionError};
+
 use super::consumer::{Account, ATMCard, Person};
 use super::types::ID;
 
-pub enum TransactionError {
-    NotEnoughBalance,
-}
+// * ERRORS
 
-pub enum BankError {
-    InvalidAccount,
-    Transaction(TransactionError)
+pub mod errors {
+    pub enum TransactionError {
+        NotEnoughBalance,
+    }
+    
+    pub enum BankError {
+        InvalidAccount,
+        Transaction(TransactionError)
+    }
 }
+// * ERRORS
+
 
 pub enum BankTransaction {
     InternalTransfer {
@@ -63,14 +71,14 @@ impl Bank {
         self.id
     }
 
-    pub fn new_account(&mut self, person: Person) -> &mut Account {
+    pub fn new_account(&mut self, person: Person) -> ID {
         let account_id = self.accounts_id_increment;
         self.accounts_id_increment += 1;
 
-        let mut new_acc: Account = Account::new(person, account_id);
+        let new_acc: Account = Account::new(person, account_id);
         self.accounts.insert(account_id, new_acc);
 
-        self.accounts.get_mut(&account_id).unwrap()
+        account_id
     }
 
     pub fn get_account(&mut self, account_id: ID) -> Option<&mut Account> {
@@ -80,7 +88,7 @@ impl Bank {
         }
     }
 
-    pub fn account_exist(&self, account_id: ID) -> bool {
+    pub fn is_account_exist(&self, account_id: ID) -> bool {
         match self.accounts.get_key_value(&account_id) {
             Some((_,_)) => true,
             None => false
@@ -90,24 +98,31 @@ impl Bank {
 
     pub fn process_transaction(&mut self, transaction: BankTransaction) -> Result<(), BankError> {
         match transaction {
-            BankTransaction::InternalTransfer { from, to, amount } => self.internal_transfer(from, to, amount),
+            BankTransaction::InternalTransfer { from, to, amount } => self.transfer_from_to(from, to, amount),
             _ => Ok(())
         }
     }
 
-    fn internal_transfer(&mut self, from: ID, to: ID, amount: u64) -> Result<(), BankError> {
-        if !self.account_exist(from) | !self.account_exist(to) {
+    fn transfer_from_to(&mut self, from: ID, to: ID, amount: u64) -> Result<(), BankError> {
+        if !self.is_account_exist(from) | !self.is_account_exist(to) {
             return Err(BankError::InvalidAccount)
         }
 
-        if let Some(source) = self.get_account(from){
-            if source.get_balance() < (amount as i64) { return Err(BankError::Transaction(TransactionError::NotEnoughBalance))}
-            source.subtract(amount);
+        let transfer_fee = self.transfer_fee.internal;
+        let total_charge: i64 = (transfer_fee + amount) as i64;
+
+        // * Charge source for transfer and amount
+        let source = self.get_account(from).unwrap();
+        if source.get_balance() < total_charge { 
+            println!("Failed transfer from accounts {from} to {to} with amount {amount} : Not Enough Balance");
+            return Err(BankError::Transaction(TransactionError::NotEnoughBalance))
         }
+        source.subtract(amount + transfer_fee);
         
-        if let Some(target) = self.get_account(to) {
-            target.add(amount);
-        }
+        // * Transfer amount to target
+        let target = self.get_account(to).unwrap();
+        target.add(amount);
+
         Ok(())
         
     }
