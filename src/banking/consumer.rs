@@ -1,4 +1,6 @@
-use super::types::ID;
+use crate::banking::bank::Bank;
+use crate::banking::types::BankID;
+use super::types::{AccountID, ID};
 
 pub struct Person {
     first_name: String,
@@ -16,12 +18,12 @@ impl Person {
 
 pub struct Account {
     person: Person,
-    id: ID,
+    id: AccountID,
     balance: i64
 }
 
 impl Account {
-    pub fn new(person: Person, id: u64) -> Account {
+    pub fn new(person: Person, id: AccountID) -> Account {
         Account {
             person: person,
             id: id,
@@ -29,7 +31,7 @@ impl Account {
         }
     }
 
-    pub fn id(&self) -> ID {
+    pub fn id(&self) -> AccountID {
         self.id
     }
     
@@ -54,8 +56,8 @@ impl Account {
 
 pub struct ATMCard {
     id: ID,
-    bank_id: ID,
-    account_id: ID
+    bank_id: BankID,
+    account_id: AccountID
 }
 
 impl ATMCard {
@@ -63,11 +65,11 @@ impl ATMCard {
         self.id
     }
 
-    pub fn bank_id(&self) -> ID {
+    pub fn bank_id(&self) -> BankID {
         self.bank_id
     }
 
-    pub fn account_id(&self) -> ID {
+    pub fn account_id(&self) -> AccountID {
         self.account_id
     }
 }
