@@ -1,5 +1,4 @@
 use std::io::Write;
-use std::string::FromUtf8Error;
 use sha256::digest;
 use crate::banking::types::ID;
 

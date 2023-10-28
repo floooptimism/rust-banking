@@ -3,8 +3,7 @@ use crate::banking::auth::Credential;
 use crate::banking::types::{AccountID, BankID};
 use self::errors::{BankError, TransactionError};
 
-use super::consumer::{Account, ATMCard, Person};
-use super::types::ID;
+use super::consumer::{account::Account, atm_card::ATMCard, person::Person};
 
 // * ERRORS
 pub mod errors {

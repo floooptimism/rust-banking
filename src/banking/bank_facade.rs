@@ -1,7 +1,8 @@
 use crate::banking::bank::{Bank, BankTransaction};
 use crate::banking::bank::errors::BankError;
-use crate::banking::consumer::Person;
 use crate::banking::types::AccountID;
+
+use crate::banking::consumer::person::Person;
 
 pub struct BankFacade<'a> {
     bank: &'a mut Bank
