@@ -1,4 +1,4 @@
-use banking::{bank_association::BankAssociation, consumer::Person, bank::BankTransaction};
+use banking::{bank_association::BankAssociation, consumer::Person};
 
 use crate::banking::bank::TransferFee;
 
@@ -11,22 +11,21 @@ fn main() {
         internal: 0,
         external: 25
     });
-    let bank = bank_association_1.get_bank_mut(new_bank_id).unwrap();
-
+    let mut bank = bank_association_1.get_bank_facade(new_bank_id).unwrap();
 
     let jenny = Person::new("Jenny".to_string(), "Pearsons".to_string());
     let henry = Person::new("Henry".to_string(), "Waters".to_string());
     
-    let jenny_id = bank.new_account(jenny);
-    let henry_id = bank.new_account(henry);
+    let jenny_id = bank.create_account(jenny, "jenny".to_string(), "jennypass".to_string());
+    let henry_id = bank.create_account(henry, "henry".to_string(), "henrypass".to_string());
 
-    bank.get_account(jenny_id).unwrap().add(1000); // * Add 1000 to jenny
-    bank.get_account(henry_id).unwrap().add(100); // * Add 100 to henry
+    bank.add_to_account(jenny_id, 1000); // * Add 1000 to jenny
+    bank.add_to_account(henry_id, 100); // * Add 100 to henry
     
-    let _ = bank.process_transaction(BankTransaction::InternalTransfer { from: henry_id, to: jenny_id, amount: 100 }); 
-    let _ = bank.process_transaction(BankTransaction::InternalTransfer { from: jenny_id, to: henry_id, amount: 500 }); 
+    let _ = bank.transfer_to(henry_id, jenny_id, 100);
+    let _ = bank.transfer_to(jenny_id, henry_id, 500);
 
-    let henry_balance = bank.get_account(henry_id).unwrap().get_balance(); 
+    let henry_balance = bank.get_balance(henry_id);
 
     assert_eq!(henry_balance, 500);
 
