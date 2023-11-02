@@ -1,16 +1,12 @@
 use crossterm::{
-    event::{self, KeyCode, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
+    ExecutableCommand, event::KeyCode, cursor::Show,
 };
-use ratatui::{
-    prelude::{CrosstermBackend, Stylize, Terminal},
-    widgets::Paragraph,
-};
+use ratatui::
+    prelude::{CrosstermBackend, Terminal};
+    
 use std::io::{stdout, Result, Stdout};
-use std::ops::BitAnd;
-use crate::ui::app_state::AppState;
-use crate::ui::events::{Event, get_key_pressed, has_event, is_key_event, is_key_pressed};
+use crate::ui::app_state::{AppState, InputMode};
 use crate::ui::traits::component::Component;
 use crate::ui::view::welcome::Welcome;
 
@@ -32,16 +28,29 @@ fn render_loop() -> Result<()> {
 
     let mut main_view = Welcome::new();
     let mut app_state = AppState::new();
-
-    loop {
+    
+    
+    'main_loop: loop {
         app_state.get_events();
-        main_view.handle_events(&app_state);
+        main_view.handle_events(&mut app_state)?;
         draw(&mut terminal, &main_view)?;
 
-        // root event handler
-        match app_state.key_pressed() {
-            KeyCode::Char('q') => break, //* Exit program
-            _ => ()
+        
+        // * root event handler
+        // * If we're not accepting inputs
+        if let InputMode::Normal = app_state.input_mode() {
+            match app_state.key_pressed() {
+                KeyCode::Char('q') => break 'main_loop, //* Exit program
+                _ => ()
+            }
+        }
+
+        match app_state.input_mode() {
+            InputMode::Normal => (),
+            InputMode::Input => {
+                let _ = stdout().execute(Show); // Show cursor
+                ()
+            }
         }
     }
 
@@ -50,7 +59,7 @@ fn render_loop() -> Result<()> {
 
 fn draw(terminal: &mut Terminal<CrosstermBackend<Stdout>>, root_view: &impl Component) -> Result<()> {
     terminal.draw( |frame| {
-        root_view.draw(frame);
+        root_view.draw(frame, None);
     })?;
     Ok(())
 }

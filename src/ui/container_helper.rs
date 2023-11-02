@@ -1,5 +1,6 @@
 use ratatui::Frame;
 use ratatui::layout::Rect;
+use std::cmp::{min, max};
 use std::io::Result;
 
 pub struct Margin {
@@ -40,7 +41,7 @@ pub fn apply_margins(rect: Rect, margins: Margin) -> Rect {
     let offset_x = margins.left;
     let offset_y = margins.top;
 
-    let actual_width = width - (offset_x + margins.right);
-    let actual_height = height - (offset_y + margins.bottom);
+    let actual_width = max((width as i64) - (offset_x + margins.right) as i64,  0) as u16;
+    let actual_height = max((height as i64) - (offset_y + margins.bottom) as i64, 0) as u16;
     Rect::new(offset_x, offset_y, actual_width, actual_height)
 }
