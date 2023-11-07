@@ -6,6 +6,8 @@ use ratatui::{prelude::Rect, widgets::{Block, Paragraph, Borders}, style::Styliz
 use ratatui::style::Style;
 
 use crate::ui::{traits::component::Component, app_state::AppState};
+use crate::ui::app_state::InputMode;
+use crate::ui::traits::focusable::Focusable;
 
 pub struct Input {
     is_taking_input: bool,
@@ -39,7 +41,7 @@ impl Input {
 
     fn make_block(&self) -> Block {
         let mut block = Block::default().borders(Borders::ALL).title(self.label.clone());
-        if self.is_focused && self.is_taking_input {
+        if self.is_focused {
             block = block.border_style(Style::new().yellow());
         }
         block
@@ -55,19 +57,23 @@ impl Input {
         string_to_render
     }
 
-    pub fn enable_focus(&mut self) {
-        self.is_focused = true;
-    }
 
-    pub fn disable_focus(&mut self) {
-        self.is_focused = false;
-    }
 
     pub fn set_formatter(&mut self, formatter: Option<char>) {
         self.formatter = formatter;
     }
 }
 
+
+impl Focusable for Input {
+    fn enable_focus(&mut self) {
+        self.is_focused = true;
+    }
+
+    fn disable_focus(&mut self) {
+        self.is_focused = false;
+    }
+}
 
 impl Component for Input {
     fn draw(&self, frame: &mut Frame, rect: Option<Rect>) {
@@ -77,6 +83,7 @@ impl Component for Input {
         inside_block.y += 1;
         inside_block.x += 1;
         inside_block.height = 1;
+        inside_block.width -= 1;
 
         let block = self.make_block();
         let string_to_render = self.make_string_to_render();
@@ -89,19 +96,19 @@ impl Component for Input {
 
     fn handle_events(&mut self, app_state: &mut AppState) -> std::io::Result<()> {
 
-        match app_state.key_pressed() {
-            KeyCode::Enter => {
+        match app_state.input_mode() {
+            InputMode::Input => {
                 self.is_taking_input = true;
-                app_state.set_input_mode_to_input();
             },
-            KeyCode::Esc => {
+            InputMode::Normal => {
                 self.is_taking_input = false;
-                app_state.set_input_mode_to_normal();
             },
             _ => ()
         }
 
         if self.is_taking_input && self.is_focused {
+            app_state.set_cursor_mode_to_show(); // Show cursor
+
             match app_state.key_pressed() {
                 KeyCode::Char(c) => {
                     self.value.push(c);

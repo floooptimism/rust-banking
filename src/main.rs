@@ -6,7 +6,8 @@ use ratatui::
     prelude::{CrosstermBackend, Terminal};
     
 use std::io::{stdout, Result, Stdout};
-use crate::ui::app_state::{AppState, InputMode};
+use crossterm::cursor::Hide;
+use crate::ui::app_state::{AppState, CursorMode, InputMode};
 use crate::ui::traits::component::Component;
 use crate::ui::view::welcome::Welcome;
 
@@ -31,11 +32,12 @@ fn render_loop() -> Result<()> {
     
     
     'main_loop: loop {
-        app_state.get_events();
+        app_state.handle_events();
         main_view.handle_events(&mut app_state)?;
         draw(&mut terminal, &main_view)?;
-
         
+        app_state.handle_cursor_modes();
+
         // * root event handler
         // * If we're not accepting inputs
         if let InputMode::Normal = app_state.input_mode() {
@@ -45,13 +47,7 @@ fn render_loop() -> Result<()> {
             }
         }
 
-        match app_state.input_mode() {
-            InputMode::Normal => (),
-            InputMode::Input => {
-                let _ = stdout().execute(Show); // Show cursor
-                ()
-            }
-        }
+
     }
 
     Ok(())
